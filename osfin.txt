@@ -1,0 +1,999 @@
+1. parent and child process:
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int main() {
+    pid_t child_pid = fork();
+
+    if (child_pid == 0) {
+        printf("Child process: My PID is %d\n", getpid());
+    } else if (child_pid > 0) {
+        printf("Parent process: My PID is %d, Child PID is %d\n", getpid(), child_pid);
+    } else {
+        printf("Fork failed\n");
+    }
+
+    return 0;
+}
+
+zombie process:
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int main() {
+    pid_t zombie_pid = fork();
+
+    if (zombie_pid == 0) {
+        printf("Zombie child process: My PID is %d\n", getpid());
+    } else if (zombie_pid > 0) {
+        printf("Parent process: My PID is %d, Zombie Child PID is %d\n", getpid(), zombie_pid);
+        while (1) {
+            sleep(1);
+        }
+    } else {
+        printf("Fork failed\n");
+    }
+
+    return 0;
+}
+
+orphan process:
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int main() {
+    pid_t zombie_pid = fork();
+
+    if (zombie_pid == 0) {
+        printf("Zombie child process: My PID is %d\n", getpid());
+    } else if (zombie_pid > 0) {
+        printf("Parent process: My PID is %d, Zombie Child PID is %d\n", getpid(), zombie_pid);
+        while (1) {
+            sleep(1);
+        }
+    } else {
+        printf("Fork failed\n");
+    }
+
+    return 0;
+}
+
+==================================================================================
+2. FCFS
+
+#include <stdio.h>
+
+int fcfs()
+{
+    int process_no;
+    printf("Enter the number of processes: ");
+    scanf("%d", &process_no);
+    int process_arr[process_no];
+    int Bt_arr[process_no];
+    int priority[process_no];
+
+    for (int i = 0; i < process_no; i++)
+    {
+        process_arr[i] = i + 1;
+        printf("Enter the Burst Time for process %d: ", i + 1);
+        scanf("%d", &Bt_arr[i]);
+        printf("Enter the Priority for process %d: ", i + 1);
+        scanf("%d", &priority[i]);
+    }
+
+    int sum = 0;
+    int intersum[process_no];
+    for (int j = 0; j < process_no - 1; j++)
+    {
+        sum = sum + Bt_arr[j];
+        intersum[j] = sum;
+    }
+
+    int inrsum = 0;
+    for (int k = 0; k < process_no - 1; k++)
+    {oko
+        inrsum = inrsum + intersum[k];
+    }
+    float result = (float)inrsum / process_no;
+    printf("Response time is: %f\n", result);
+    printf("Process sequence: ");
+    for (int k = 0; k < process_no; k++)
+    {
+        printf("%d -> ", process_arr[k]);
+    }
+    printf("end\n");
+    return 0;
+}
+
+int main()
+{
+    printf("FCFS Scheduling Algorithm\n");
+    fcfs();
+    return 0;
+}
+==============================================================================
+
+3.sjf non-preemptive
+
+#include <stdio.h>
+
+void sjf_non_preemptive(int process_no, int Bt_arr[]) {
+    int completed = 0, current_time = 0;
+
+    while (completed < process_no) {
+        int shortest = -1, shortest_bt = 0x7FFFFFFF;
+
+        for (int i = 0; i < process_no; i++) {
+            if (Bt_arr[i] > 0 && Bt_arr[i] < shortest_bt) {
+                shortest = i;
+                shortest_bt = Bt_arr[i];
+            }
+        }
+
+        printf("Process %d is running at time %d\n", shortest + 1, current_time);
+        current_time += Bt_arr[shortest];
+        Bt_arr[shortest] = 0;
+        completed++;
+    }
+}
+
+int main() {
+    int process_no = 4;
+    int Bt_arr[] = {6, 8, 3, 4};
+
+    printf("Non-Preemptive Shortest Job First (SJF) Scheduling Algorithm\n");
+    sjf_non_preemptive(process_no, Bt_arr);
+
+    return 0;
+}
+============================================================================
+
+4.sjf premptive
+
+#include <stdio.h>
+
+void sjf_preemptive(int process_no, int Bt_arr[]) {
+    int completed = 0, current_time = 0;
+
+    while (completed < process_no) {
+        int shortest = -1, shortest_bt = 0x7FFFFFFF;
+
+        for (int i = 0; i < process_no; i++) {
+            if (Bt_arr[i] > 0 && Bt_arr[i] < shortest_bt) {
+                shortest = i;
+                shortest_bt = Bt_arr[i];
+            }
+        }
+
+        printf("Process %d is running at time %d\n", shortest + 1, current_time);
+        Bt_arr[shortest]--;
+        current_time++;
+
+        if (Bt_arr[shortest] == 0) {
+            completed++;
+        }
+    }
+}
+
+int main() {
+    int process_no = 4;
+    int Bt_arr[] = {6, 8, 3, 4};
+
+    printf("Preemptive Shortest Job First (SJF) Scheduling Algorithm\n");
+    sjf_preemptive(process_no, Bt_arr);
+
+    return 0;
+}
+=============================================================================
+5. round robin
+
+#include <stdio.h>
+
+void round_robin(int process_no, int Bt_arr[], int time_quantum) {
+    int completed = 0, current_time = 0;
+
+    while (completed < process_no) {
+        for (int i = 0; i < process_no; i++) {
+            if (Bt_arr[i] > 0) {
+                printf("Process %d is running at time %d\n", i + 1, current_time);
+                if (Bt_arr[i] > time_quantum) {
+                    current_time += time_quantum;
+                    Bt_arr[i] -= time_quantum;
+                } else {
+                    current_time += Bt_arr[i];
+                    Bt_arr[i] = 0;
+                    completed++;
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    int process_no = 4;
+    int Bt_arr[] = {6, 8, 3, 4};
+    int time_quantum = 3;
+
+    printf("Round Robin Scheduling Algorithm\n");
+    round_robin(process_no, Bt_arr, time_quantum);
+
+    return 0;
+}
+============================================================================
+
+5) Bankers Algo (Safety Sequence algorithm)
+
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_PROCESSES 5
+#define MAX_RESOURCES 3
+
+bool isSafeState(int available[], int max[][MAX_RESOURCES], int allocation[])
+{
+    int work[MAX_RESOURCES];
+    bool finish[MAX_PROCESSES] = { false };
+    int need[MAX_PROCESSES][MAX_RESOURCES];
+
+    // Initialize work and need matrices
+    for (int i = 0; i < MAX_RESOURCES; i++)
+    {
+        work[i] = available[i];
+        for (int j = 0; j < MAX_PROCESSES; j++)
+        {
+            need[j][i] = max[j][i] - allocation[j][i];
+        }
+    }
+
+    int safeSequence[MAX_PROCESSES];
+    int count = 0;
+
+    while (count < MAX_PROCESSES)
+    {
+        bool found = false;
+
+        for (int i = 0; i < MAX_PROCESSES; i++)
+        {
+            if (!finish[i])
+            {
+                bool canExecute = true;
+
+                for (int j = 0; j < MAX_RESOURCES; j++)
+                {
+                    if (need[i][j] > work[j])
+                    {
+                        canExecute = false;
+                        break;
+                    }
+                }
+
+                if (canExecute)
+                {
+                    for (int j = 0; j < MAX_RESOURCES; j++)
+                    {
+                        work[j] += allocation[i][j];
+                    }
+
+                    finish[i] = true;
+                    safeSequence[count] = i;
+                    count++;
+                    found = true;
+                }
+            }
+        }
+
+        if (!found)
+        {
+            return false;
+        }
+    }
+
+    printf("System is in a safe state.\nSafe sequence: ");
+    for (int i = 0; i < MAX_PROCESSES; i++)
+    {
+        printf("%d ", safeSequence[i]);
+    }
+    printf("\n");
+
+    return true;
+}
+
+int main()
+{
+    int available[MAX_RESOURCES] = { 3, 3, 2 };
+    int max[MAX_PROCESSES][MAX_RESOURCES] = {
+        { 7, 5, 3 },
+        { 3, 2, 2 },
+        { 9, 0, 2 },
+        { 2, 2, 2 },
+        { 4, 3, 3 }
+    };
+
+    int allocation[MAX_PROCESSES][MAX_RESOURCES] = {
+        { 0, 1, 0 },
+        { 2, 0, 0 },
+        { 3, 0, 2 },
+        { 2, 1, 1 },
+        { 0, 0, 2 }
+    };
+
+    printf("21BCE0493 Umesh Kumaar S\n");
+
+    if (isSafeState(available, max, allocation))
+    {
+        printf("The System is in a safe state.\n");
+    }
+    else
+    {
+        printf("The System is in an unsafe state.\n");
+    }
+
+    return 0;
+}
+___________________________________________________________________________________________
+
+6) Bankers-additional resource request algorithm.
+
+#include <stdio.h>
+
+int main()
+{
+    int i, j, k, n, m;
+    n = 5;
+    m = 3;
+    printf("JAYA PRAKASH S P (21BCE2105)\n");
+
+    int arr[5][3] = {
+        {0, 1, 0},
+        {2, 0, 0},
+        {3, 0, 2},
+        {2, 1, 1},
+        {0, 0, 2}
+    };
+
+    int max[5][3] = {
+        {7, 5, 3},
+        {3, 2, 2},
+        {9, 0, 2},
+        {2, 2, 2},
+        {4, 3, 3}
+    };
+
+    int avail[3] = {3, 3, 2};
+
+    int f[n], ans[n], ind = 0;
+    for (k = 0; k < n; k++)
+    {
+        f[k] = 0;
+    }
+
+    int need[n][m];
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < m; j++)
+        {
+            need[i][j] = max[i][j] - arr[i][j];
+        }
+    }
+
+    int y = 0;
+    for (k = 0; k < 5; k++)
+    {
+        for (i = 0; i < n; i++)
+        {
+            if (f[i] == 0)
+            {
+                int flag = 0;
+                for (j = 0; j < m; j++)
+                {
+                    if (need[i][j] > avail[j])
+                    {
+                        flag = 1;
+                        break;
+                    }
+                }
+                if (flag == 0)
+                {
+                    ans[ind++] = i;
+                    for (y = 0; y < m; y++)
+                    {
+                        avail[y] += arr[i][y];
+                    }
+                    f[i] = 1;
+                }
+            }
+        }
+    }
+
+    int flag = 1;
+    for (int i = 0; i < n; i++)
+    {
+        if (f[i] == 0)
+        {
+            flag = 0;
+            printf("The following system is not safe");
+            break;
+        }
+    }
+
+    if (flag == 1)
+    {
+        printf("Following is the SAFE Sequence\n");
+        for (i = 0; i < n - 1; i++)
+        {
+            printf(" P%d ->", ans[i]);
+        }
+        printf(" P%d", ans[n - 1]);
+    }
+
+    return 0;
+}
+============================================================================
+7) Process Synchronization - Producer-Consumer problem
+using Semaphore (in-built Synchronization Tool).
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int mutex = 1;
+int full = 0;
+int empty = 10;
+int x = 0;
+
+void producer() {
+    --mutex;
+    ++full;
+    --empty;
+    x++;
+    printf("\nProducer produces item %d", x);
+    ++mutex;
+}
+
+void consumer() {
+    --mutex;
+    --full;
+    ++empty;
+    printf("\nConsumer consumes item %d", x);
+    x--;
+    ++mutex;
+}
+
+int main() {
+    int n;
+    printf("JAYA PRAKASH S P (21BCE2105)");
+    printf("\n1. Press 1 for Producer"
+           "\n2. Press 2 for Consumer"
+           "\n3. Press 3 for Exit");
+
+    while (1) {
+        printf("\nEnter your choice: ");
+        scanf("%d", &n);
+
+        switch (n) {
+            case 1:
+                if (mutex == 1 && empty != 0) {
+                    producer();
+                } else {
+                    printf("Buffer is full!");
+                }
+                break;
+
+            case 2:
+                if (mutex == 1 && full != 0) {
+                    consumer();
+                } else {
+                    printf("Buffer is empty!");
+                }
+                break;
+
+            case 3:
+                exit(0);
+
+            default:
+                printf("Invalid choice!");
+        }
+    }
+    return 0;
+}
+
+___________________________________________________________________________________________
+
+8)Implement Reader writer problem using semaphore (in-built
+Synchronization Tool).
+
+#include <semaphore.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+sem_t x, y;
+int readercount = 0;
+
+void* reader(void* param) {
+    sem_wait(&x);
+    readercount++;
+    if (readercount == 1)
+        sem_wait(&y);
+    sem_post(&x);
+
+    printf("\nReader is inside. Reader count: %d\n", readercount);
+
+    sem_wait(&x);
+    readercount--;
+    if (readercount == 0)
+        sem_post(&y);
+    sem_post(&x);
+
+    printf("Reader is leaving. Reader count: %d\n", readercount);
+    return NULL;
+}
+
+void* writer(void* param) {
+    printf("\nWriter is trying to enter");
+    sem_wait(&y);
+    printf("\nWriter has entered");
+    sem_post(&y);
+    printf("\nWriter is leaving");
+    return NULL;
+}
+
+int main() {
+    int num_threads;
+    printf("JAYA PRAKASH S P (21BCE2105)\n");
+    printf("Enter the number of reader/writer threads: ");
+    scanf("%d", &num_threads);
+
+    pthread_t threads[num_threads];
+    sem_init(&x, 0, 1);
+    sem_init(&y, 0, 1);
+
+    for (int i = 0; i < num_threads; i++) {
+        if (i % 2 == 0)
+            pthread_create(&threads[i], NULL, reader, NULL);
+        else
+            pthread_create(&threads[i], NULL, writer, NULL);
+    }
+
+    for (int i = 0; i < num_threads; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    sem_destroy(&x);
+    sem_destroy(&y);
+
+    return 0;
+}
+___________________________________________________________________________________________
+
+e) Implement a solution for the classical synchronization problem: Dining
+Philosophers using monitor(User defined Constructs).
+
+#include <pthread.h>
+#include <semaphore.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#define NUM_PHILOSOPHERS 5
+#define THINKING 2
+#define HUNGRY 1
+#define EATING 0
+#define LEFT (ph_num + 4) % NUM_PHILOSOPHERS
+#define RIGHT (ph_num + 1) % NUM_PHILOSOPHERS
+
+int state[NUM_PHILOSOPHERS];
+int philosophers[NUM_PHILOSOPHERS] = { 0, 1, 2, 3, 4 };
+sem_t mutex;
+sem_t semaphores[NUM_PHILOSOPHERS];
+
+void test(int ph_num)
+{
+    if (state[ph_num] == HUNGRY && state[LEFT] != EATING && state[RIGHT] != EATING) {
+        // Update state to eating
+        state[ph_num] = EATING;
+        sleep(2);
+        printf("Philosopher %d takes forks %d and %d\n", ph_num + 1, LEFT + 1, ph_num + 1);
+        printf("Philosopher %d is eating\n", ph_num + 1);
+        sem_post(&semaphores[ph_num]);
+    }
+}
+
+void take_forks(int ph_num)
+{
+    sem_wait(&mutex);
+    // Update state to hungry
+    state[ph_num] = HUNGRY;
+    printf("Philosopher %d is hungry\n", ph_num + 1);
+    test(ph_num);
+    sem_post(&mutex);
+    sem_wait(&semaphores[ph_num]);
+    sleep(1);
+}
+
+void put_forks(int ph_num)
+{
+    sem_wait(&mutex);
+    // Update state to thinking
+    state[ph_num] = THINKING;
+    printf("Philosopher %d puts forks %d and %d down\n", ph_num + 1, LEFT + 1, ph_num + 1);
+    printf("Philosopher %d is thinking\n", ph_num + 1);
+    test(LEFT);
+    test(RIGHT);
+    sem_post(&mutex);
+}
+
+void* philosopher(void* num)
+{
+    while (1) {
+        int* ph_num = num;
+        sleep(1);
+        take_forks(*ph_num);
+        sleep(0);
+        put_forks(*ph_num);
+    }
+}
+
+int main()
+{
+    int i;
+    printf("JAYA PRAKASH S P (21BCE2105)\n");
+    pthread_t thread_ids[NUM_PHILOSOPHERS];
+
+    sem_init(&mutex, 0, 1);
+    for (i = 0; i < NUM_PHILOSOPHERS; i++)
+        sem_init(&semaphores[i], 0, 0);
+
+    for (i = 0; i < NUM_PHILOSOPHERS; i++) {
+        pthread_create(&thread_ids[i], NULL, philosopher, &philosophers[i]);
+        printf("Philosopher %d is thinking\n", i + 1);
+    }
+
+    for (i = 0; i < NUM_PHILOSOPHERS; i++)
+        pthread_join(thread_ids[i], NULL);
+
+    return 0;
+}
+==============================================================================
+
+8. Page replacement
+
+#include <stdio.h>
+#include <stdbool.h>
+
+#define NUM_FRAMES 3
+#define NUM_PAGES 12
+
+void print_page_table(int page_table[], int size) {
+    printf("Page Table: ");
+    for (int i = 0; i < size; i++) {
+        printf("%2d ", page_table[i]);
+    }
+    printf("\n");
+}
+
+void lru_page_replacement(int pages[], int n) {
+    int frames[NUM_FRAMES];
+    int page_table[NUM_PAGES] = {0};
+    int time_counter = 0;
+    int page_faults = 0;
+
+    for (int i = 0; i < n; i++) {
+        int page = pages[i];
+        bool page_found = false;
+
+        // Check if page is already in memory
+        for (int j = 0; j < NUM_FRAMES; j++) {
+            if (frames[j] == page) {
+                page_found = true;
+                page_table[page] = ++time_counter;
+                break;
+            }
+        }
+
+        // Page fault - replace the least recently used page
+        if (!page_found) {
+            int min_time = page_table[frames[0]];
+            int min_index = 0;
+
+            for (int j = 1; j < NUM_FRAMES; j++) {
+                if (page_table[frames[j]] < min_time) {
+                    min_time = page_table[frames[j]];
+                    min_index = j;
+                }
+            }
+
+            frames[min_index] = page;
+            page_table[page] = ++time_counter;
+            page_faults++;
+        }
+
+        print_page_table(frames, NUM_FRAMES);
+    }
+
+    printf("LRU Page Faults: %d\n", page_faults);
+    printf("LRU Page Fault Ratio: %.2f\n", (float)page_faults / n);
+}
+
+void fifo_page_replacement(int pages[], int n) {
+    int frames[NUM_FRAMES];
+    int page_table[NUM_PAGES] = {0};
+    int fifo_index = 0;
+    int page_faults = 0;
+
+    for (int i = 0; i < n; i++) {
+        int page = pages[i];
+        bool page_found = false;
+
+        // Check if page is already in memory
+        for (int j = 0; j < NUM_FRAMES; j++) {
+            if (frames[j] == page) {
+                page_found = true;
+                break;
+            }
+        }
+
+        // Page fault - replace the oldest page in the queue
+        if (!page_found) {
+            frames[fifo_index] = page;
+            fifo_index = (fifo_index + 1) % NUM_FRAMES;
+            page_faults++;
+        }
+
+        print_page_table(frames, NUM_FRAMES);
+    }
+
+    printf("FIFO Page Faults: %d\n", page_faults);
+    printf("FIFO Page Fault Ratio: %.2f\n", (float)page_faults / n);
+}
+
+void optimal_page_replacement(int pages[], int n) {
+    int frames[NUM_FRAMES];
+    int page_table[NUM_PAGES] = {0};
+    int page_faults = 0;
+
+    for (int i = 0; i < n; i++) {
+        int page = pages[i];
+        bool page_found = false;
+
+        // Check if page is already in memory
+        for (int j = 0; j < NUM_FRAMES; j++) {
+            if (frames[j] == page) {
+                page_found = true;
+                break;
+            }
+        }
+
+        // Page fault - find the optimal page to replace
+        if (!page_found) {
+            int max_distance = -1;
+            int replace_index = -1;
+
+            for (int j = 0; j < NUM_FRAMES; j++) {
+                int k;
+                for (k = i + 1; k < n; k++) {
+                    if (frames[j] == pages[k]) {
+                        break;
+                    }
+                }
+
+                if (k == n) {
+                    replace_index = j;
+                    break;
+                }
+
+                if (k - i > max_distance) {
+                    max_distance = k - i;
+                    replace_index = j;
+                }
+            }
+
+            frames[replace_index] = page;
+            page_faults++;
+        }
+
+        print_page_table(frames, NUM_FRAMES);
+    }
+
+    printf("Optimal Page Faults: %d\n", page_faults);
+    printf("Optimal Page Fault Ratio: %.2f\n", (float)page_faults / n);
+}
+
+int main() {
+    int pages[] = {2, 3, 2, 1, 5, 2, 4, 5, 3, 2, 5, 2};
+    int n = sizeof(pages) / sizeof(pages[0]);
+
+    printf("LRU Page Replacement Algorithm\n");
+    lru_page_replacement(pages, n);
+
+    printf("\nFIFO Page Replacement Algorithm\n");
+    fifo_page_replacement(pages, n);
+
+    printf("\nOptimal Page Replacement Algorithm\n");
+    optimal_page_replacement(pages, n);
+
+    return 0;
+}
+========================================================================
+
+9. Disk scheduling:
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <limits.h>
+
+#define NUM_REQUESTS 8
+#define STARTING_POSITION 53
+#define MAX_CYLINDER 199
+
+// FCFS Disk Scheduling Algorithm
+int fcfs(int requests[]) {
+    int current_pos = STARTING_POSITION;
+    int seek_time = 0;
+
+    for (int i = 0; i < NUM_REQUESTS; i++) {
+        int distance = abs(requests[i] - current_pos);
+        seek_time += distance;
+        current_pos = requests[i];
+    }
+
+    return seek_time;
+}
+
+// SSTF Disk Scheduling Algorithm
+int sstf(int requests[]) {
+    int current_pos = STARTING_POSITION;
+    int seek_time = 0;
+    bool visited[NUM_REQUESTS] = {false};
+
+    for (int i = 0; i < NUM_REQUESTS; i++) {
+        int min_distance = INT_MAX;
+        int min_index = -1;
+
+        for (int j = 0; j < NUM_REQUESTS; j++) {
+            if (!visited[j]) {
+                int distance = abs(requests[j] - current_pos);
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    min_index = j;
+                }
+            }
+        }
+
+        visited[min_index] = true;
+        seek_time += min_distance;
+        current_pos = requests[min_index];
+    }
+
+    return seek_time;
+}
+
+// SCAN Disk Scheduling Algorithm
+int scan(int requests[]) {
+    int current_pos = STARTING_POSITION;
+    int seek_time = 0;
+    int direction = 1;
+
+    while (true) {
+        int min_distance = INT_MAX;
+        int min_index = -1;
+
+        for (int i = 0; i < NUM_REQUESTS; i++) {
+            int distance = abs(requests[i] - current_pos);
+            if (distance < min_distance && (direction == 1 ? requests[i] >= current_pos : requests[i] <= current_pos)) {
+                min_distance = distance;
+                min_index = i;
+            }
+        }
+
+        if (min_index == -1) {
+            // Change direction if no requests found in the current direction
+            direction = -direction;
+            continue;
+        }
+
+        seek_time += min_distance;
+        current_pos = requests[min_index];
+        requests[min_index] = direction == 1 ? MAX_CYLINDER : 0; // Mark the request as served
+        if (direction == 1 && current_pos == MAX_CYLINDER) break; // Reach the end
+        if (direction == -1 && current_pos == 0) break; // Reach the beginning
+    }
+
+    return seek_time;
+}
+
+// C-SCAN Disk Scheduling Algorithm
+int cscan(int requests[]) {
+    int current_pos = STARTING_POSITION;
+    int seek_time = 0;
+
+    while (true) {
+        int min_distance = INT_MAX;
+        int min_index = -1;
+
+        for (int i = 0; i < NUM_REQUESTS; i++) {
+            int distance = abs(requests[i] - current_pos);
+            if (distance < min_distance && requests[i] >= current_pos) {
+                min_distance = distance;
+                min_index = i;
+            }
+        }
+
+        if (min_index == -1) {
+            // Go to the beginning of the disk and search again
+            seek_time += MAX_CYLINDER - current_pos;
+            current_pos = 0;
+            continue;
+        }
+
+        seek_time += min_distance;
+        current_pos = requests[min_index];
+        requests[min_index] = MAX_CYLINDER; // Mark the request as served
+        if (current_pos == MAX_CYLINDER) break; // Reach the end
+    }
+
+    return seek_time;
+}
+
+// C-LOOK Disk Scheduling Algorithm
+int clook(int requests[]) {
+    int current_pos = STARTING_POSITION;
+    int seek_time = 0;
+
+    while (true) {
+        int min_distance = INT_MAX;
+        int min_index = -1;
+
+        for (int i = 0; i < NUM_REQUESTS; i++) {
+            int distance = abs(requests[i] - current_pos);
+            if (distance < min_distance && requests[i] >= current_pos) {
+                min_distance = distance;
+                min_index = i;
+            }
+        }
+
+        if (min_index == -1) {
+            // Find the smallest request larger than the current position
+            int next_request = INT_MAX;
+            int next_index = -1;
+
+            for (int i = 0; i < NUM_REQUESTS; i++) {
+                if (requests[i] >= current_pos && requests[i] < next_request) {
+                    next_request = requests[i];
+                    next_index = i;
+                }
+            }
+
+            min_distance = abs(next_request - current_pos);
+            current_pos = next_request;
+            requests[next_index] = MAX_CYLINDER; // Mark the request as served
+        } else {
+            seek_time += min_distance;
+            current_pos = requests[min_index];
+            requests[min_index] = MAX_CYLINDER; // Mark the request as served
+        }
+
+        if (current_pos == STARTING_POSITION) break; // Return to the starting position
+    }
+
+    return seek_time;
+}
+
+int main() {
+    int requests[NUM_REQUESTS] = {98, 183, 37, 122, 14, 124, 65, 67};
+
+    printf("FCFS Seek Time: %d\n", fcfs(requests));
+    printf("SSTF Seek Time: %d\n", sstf(requests));
+    printf("SCAN Seek Time: %d\n", scan(requests));
+    printf("C-SCAN Seek Time: %d\n", cscan(requests));
+    printf("C-LOOK Seek Time: %d\n", clook(requests));
+
+    return 0;
+}
+
+
